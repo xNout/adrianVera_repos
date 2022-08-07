@@ -1,8 +1,9 @@
+import { RepositoryVerifyState } from "../constants/AppEnums"
 
 export interface repositorioInfoDto
 {
     id: number,
-    state: number
+    state: RepositoryVerifyState
 }
 
 export interface VerifyStateResponseDto

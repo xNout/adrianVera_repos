@@ -1,6 +1,7 @@
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 import { AppTypes } from "../../1. presentation/web/api/app.types";
+import { RepositoryState, RepositoryVerifyState } from "../../3. domain/constants/AppEnums";
 import { RepositoryMetricsDto } from "../../3. domain/dtos/RepositoryMetricsDto";
 import { repositorioInfoDto } from "../../3. domain/dtos/VerifyStateResponseDto";
 import { Tribe } from "../../3. domain/entities/TribeEntity";
@@ -44,7 +45,8 @@ export class TribeRepository implements ITribeRepository
 
         let states: repositorioInfoDto[] = await this.verifyStateRepository.GetStates();
         result.repositorys?.forEach(item => {
-            let repoState: repositorioInfoDto | null = states.filter(x => x.id == item.id_repository)[0];
+            let repoVerifyState: repositorioInfoDto | null = states.filter(x => x.id == item.id_repository)[0];
+            let repoState: any = item.state || "";
             resultMapped.push({
                 id: item.id_repository,
                 name: item?.name?.trim(),
@@ -55,19 +57,19 @@ export class TribeRepository implements ITribeRepository
                 bugs: item.metrics?.bugs,
                 vulnerabilities: item.metrics?.vulnerabilities,
                 hotspots: item.metrics?.hotspot,
-                verificationState: this.GetVerifyStateXCode(repoState?.state),
-                state: this.GetRepositoryState(item.state)
+                verificationState: this.GetVerifyStateXCode(repoVerifyState?.state),
+                state: (RepositoryState[repoState] as string)
             });
         });
         return resultMapped;
     }
-    private GetVerifyStateXCode(state: number): string
+    private GetVerifyStateXCode(state: RepositoryVerifyState): string
     {
-        if(state == 604)
+        if(state == RepositoryVerifyState.Verificado)
         {
             return "Verificado";
         }
-        else if(state == 605)
+        else if(state == RepositoryVerifyState.EnEspera)
         {
             return "En Espera";
         }
@@ -84,21 +86,5 @@ export class TribeRepository implements ITribeRepository
             .getCount();
 
         return count > 0;
-    }
-    
-    private GetRepositoryState(state?: string): string
-    {
-        if(state == "E")
-        {
-            return "Habilitado";
-        }
-        if(state == "D")
-        {
-            return "Deshabilitado";
-        }
-        else
-        {
-            return "Archivado";
-        }
     }
 }
